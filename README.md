@@ -8,16 +8,16 @@
 
 ## Connect & Configure
 
-Simply pass the D1 object into the php-wasm constructor to enable pdo_cfd1 support:
+Simply pass the D1 object into the php-wasm constructor as `cfdb` to enable pdo_cfd1 support:
 
 ```javascript
-const php = new PhpWorker({ cfd1: context.env.db });
+const php = new PhpWorker({ cfdb: context.env.db });
 ```
 
 Once D1 is passed in, `cfd1:` will be available as a PDO driver.
 
 ```javascript
-const php = new PhpWorker({ cfd1: context.env.db });
+const php = new PhpWorker({ cfdb: context.env.db });
 
 php.run(`<?php $pdo = new PDO('cfd1:');`);
 ```
@@ -25,7 +25,7 @@ php.run(`<?php $pdo = new PDO('cfd1:');`);
 PDO can be used with D1 just like any other SQL server:
 
 ```php
-const php = new PhpWorker({ cfd1: context.env.db });
+const php = new PhpWorker({ cfdb: context.env.db });
 
 php.run(`<?php
 	$pdo = new PDO('cfd1:');
