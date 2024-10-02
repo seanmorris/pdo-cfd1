@@ -1,0 +1,7 @@
+ARG_ENABLE('pdo_cfd1', 'pdo_cfd1 support', 'no');
+
+if (PHP_PDO_CFD1 != 'no') {
+	AC_DEFINE('HAVE_PDO_CFD1', 1, 'pdo_cfd1 support enabled');
+
+	EXTENSION('pdo_cfd1', 'pdo_cfd1.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+}
