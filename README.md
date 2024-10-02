@@ -6,6 +6,8 @@
 
 ### Join the community: [reddit](https://www.reddit.com/r/phpwasm/) | [discord](https://discord.gg/j8VZzju7gJ) | [php-wasm](https://github.com/seanmorris/php-wasm)
 
+### Coming Soon! Tutorial on getting php-wasm running in CloudFlare.
+
 ## Connect & Configure
 
 Simply pass the D1 object into the php-wasm constructor as `cfdb` to enable pdo_cfd1 support:
