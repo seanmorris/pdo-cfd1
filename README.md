@@ -22,6 +22,10 @@ const php = new PhpWorker({ cfdb: context.env.db });
 php.run(`<?php $pdo = new PDO('cfd1:');`);
 ```
 
+You can check `phpinfo()` to make sure that the D1 object is detected. `CloudFlare D1 SQL module detected` will display "yes" when the object has been passed in correctly:
+
+![](https://raw.githubusercontent.com/seanmorris/pdo-cfd1/refs/heads/master/phpinfo.png)
+
 PDO can be used with D1 just like any other SQL server:
 
 ```php
