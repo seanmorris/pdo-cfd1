@@ -24,17 +24,17 @@ typedef struct {
 } pdo_cfd1_db_error_info;
 
 typedef struct {
-	jstarget *targetId;
+	zval db;
 	pdo_cfd1_db_error_info einfo;
 } pdo_cfd1_db_handle;
 
 typedef struct {
 	pdo_cfd1_db_handle *db;
-	vrzno_object *stmt;
 	unsigned long curr;
 	unsigned long row_count;
 	unsigned pre_fetched:1;
 	unsigned done:1;
+	zval prepared;
 	zval results;
 } pdo_cfd1_stmt;
 

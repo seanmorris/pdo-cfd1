@@ -1,10 +1,6 @@
 static void cfd1_handle_closer(pdo_dbh_t *dbh)
 {
-	pdo_cfd1_db_handle *handle = dbh->driver_data;
-
-	EM_ASM({
-		console.log('CLOSE', $0);
-	});
+	// EM_ASM({ console.log('CLOSE', $0);}, dbh);
 }
 
 static bool cfd1_handle_preparer(pdo_dbh_t *dbh, zend_string *sql, pdo_stmt_t *stmt, zval *driver_options)
@@ -17,25 +13,19 @@ static bool cfd1_handle_preparer(pdo_dbh_t *dbh, zend_string *sql, pdo_stmt_t *s
 
 	const char *sqlString = ZSTR_VAL(sql);
 
-	zval *prepared;
-
 	EM_ASM({
-		const query = UTF8ToString($0);
-		const zv = $1;
-		const prepared = Module.cfdb.prepare(query);
+		const dbName = UTF8ToString($0);
+		const query = UTF8ToString($1);
+		const zv = $2;
+		
+		const prepared = Module.cfd1[dbName].prepare(query);
 		Module.jsToZval(prepared, zv);
 
-	}, sqlString, &prepared);
+	}, dbh->data_source, sqlString, &vStmt->prepared);
 
-	if(prepared)
-	{
-		vStmt->db   = handle;
-		vStmt->stmt = vrzno_fetch_object(Z_OBJ_P(prepared));
-
-		return true;
-	}
-
-	return false;
+	vStmt->db = handle;
+	
+	return true;
 }
 
 static zend_long cfd1_handle_doer(pdo_dbh_t *dbh, const zend_string *sql)
@@ -147,8 +137,6 @@ static const struct pdo_dbh_methods cfd1_db_methods = {
 static int pdo_cfd1_db_handle_factory(pdo_dbh_t *dbh, zval *driver_options)
 {
 	pdo_cfd1_db_handle *handle;
-	int ret = 0;
-
 	handle = pecalloc(1, sizeof(pdo_cfd1_db_handle), dbh->is_persistent);
 
 	handle->einfo.errcode = 0;
@@ -156,9 +144,21 @@ static int pdo_cfd1_db_handle_factory(pdo_dbh_t *dbh, zval *driver_options)
 	dbh->driver_data = handle;
 	dbh->methods = &cfd1_db_methods;
 
-	ret = 1;
+	EM_ASM({
+		if(typeof Module.cfd1 !== 'object')
+		{
+			throw new Error("The `cfd1` object must be provided as a constructor arg to PHP to use pdo_cfd1.");
+		}
 
-	return ret;
+		const dbName = UTF8ToString($0);
+		
+		if(typeof Module.cfd1[dbName] !== 'object')
+		{
+			throw new Error(`The value provided at cfd1[${dbName}] does not exist or is not an object.`);
+		}
+	}, dbh->data_source);
+
+	return 1;
 }
 
 const pdo_driver_t pdo_cfd1_driver = {

@@ -5,8 +5,8 @@ static int pdo_cfd1_stmt_dtor(pdo_stmt_t *stmt)
 	return 1;
 }
 
-EM_ASYNC_JS(zval*, pdo_cfd1_real_stmt_execute, (long targetId, zval *rv), {
-	const statement = Module.targets.get(targetId);
+EM_ASYNC_JS(int, pdo_cfd1_real_stmt_execute, (zval *zv, zval *rv), {
+	const statement = Module.zvalToJS(zv);
 
 	if(!Module.PdoParams.has(statement))
 	{
@@ -19,7 +19,16 @@ EM_ASYNC_JS(zval*, pdo_cfd1_real_stmt_execute, (long targetId, zval *rv), {
 		? statement.bind(...paramList)
 		: statement;
 
-	const result = await bound.run();
+	let result = false;
+	try
+	{
+		result = await bound.run();
+	}
+	catch(error)
+	{
+		console.error(error);
+		return false;
+	}
 
 	Module.PdoParams.delete(statement);
 
@@ -29,6 +38,8 @@ EM_ASYNC_JS(zval*, pdo_cfd1_real_stmt_execute, (long targetId, zval *rv), {
 	}
 
 	Module.jsToZval(result.results, rv);
+
+	return true;
 });
 
 static int pdo_cfd1_stmt_execute(pdo_stmt_t *stmt)
@@ -37,51 +48,28 @@ static int pdo_cfd1_stmt_execute(pdo_stmt_t *stmt)
 
 	stmt->column_count = 0;
 	vStmt->row_count = 0;
-	// stmt->executed = 1;
 	vStmt->curr = 0;
 	vStmt->done = 0;
 
-	zval *results = NULL;
-	pdo_cfd1_real_stmt_execute(vStmt->stmt->targetId, results);
+	pdo_cfd1_real_stmt_execute(&vStmt->prepared, &vStmt->results);
 
-	if(results)
+	vStmt->row_count = EM_ASM_INT({
+		const results = Module.zvalToJS($0);
+		if(results) return results.length;
+		return 0;
+	}, &vStmt->results);
+
+	if(vStmt->row_count)
 	{
-		vStmt->row_count = EM_ASM_INT({
-
-			const results = Module.targets.get($0);
-
-			if(results)
-			{
-
-				return results.length;
-			}
-
+		stmt->column_count = EM_ASM_INT({
+			const results = Module.zvalToJS($0);
+			if(results.length) return Object.keys(results[0]).length;
 			return 0;
-
-		}, vrzno_fetch_object(Z_OBJ_P(results))->targetId);
-
-		if(vStmt->row_count)
-		{
-			stmt->column_count = EM_ASM_INT({
-
-				const results = Module.targets.get($0);
-
-				if(results.length)
-				{
-
-					return Object.keys(results[0]).length;
-				}
-
-				return 0;
-
-			}, vrzno_fetch_object(Z_OBJ_P(results))->targetId);
-		}
-
-		vStmt->results = *results;
-		return true;
+		}, &vStmt->results);
 	}
 
-	return false;
+	stmt->executed = 1;
+	return true;
 }
 
 static int pdo_cfd1_stmt_fetch(pdo_stmt_t *stmt, enum pdo_fetch_orientation ori, zend_long offset)
@@ -165,11 +153,6 @@ static int pdo_cfd1_stmt_get_col(pdo_stmt_t *stmt, int colno, zval *zv, enum pdo
 {
 	pdo_cfd1_stmt *vStmt = (pdo_cfd1_stmt*)stmt->driver_data;
 
-	if (!vStmt->stmt)
-	{
-		return 0;
-	}
-
 	if(colno >= stmt->column_count)
 	{
 		return 0;
@@ -206,7 +189,7 @@ static int pdo_cfd1_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_dat
 	pdo_cfd1_stmt *vStmt = (pdo_cfd1_stmt*)stmt->driver_data;
 
 	EM_ASM({
-		const statement = Module.targets.get($0);
+		const statement = Module.zvalToJS($0);
 		const paramVal  = Module.zvalToJS($1);
 
 		if(!Module.PdoParams.has(statement))
@@ -218,20 +201,20 @@ static int pdo_cfd1_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_dat
 
 		paramList.push(paramVal);
 
-	}, vStmt->stmt->targetId, param->parameter);
+	}, &vStmt->prepared, param->parameter);
 
 	return true;
 }
 
 static int pdo_cfd1_stmt_get_attribute(pdo_stmt_t *stmt, zend_long attr, zval *val)
 {
-	EM_ASM({ console.log('GET ATTR', $0, $1, $2); }, stmt, attr, val);
+	// EM_ASM({ console.log('GET ATTR', $0, $1, $2); }, stmt, attr, val);
 	return 1;
 }
 
 static int pdo_cfd1_stmt_col_meta(pdo_stmt_t *stmt, zend_long colno, zval *return_value)
 {
-	EM_ASM({ console.log('COL META', $0, $1, $2); }, stmt, colno, return_value);
+	// EM_ASM({ console.log('COL META', $0, $1, $2); }, stmt, colno, return_value);
 	return 1;
 }
 

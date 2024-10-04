@@ -94,7 +94,7 @@ PHP_MINFO_FUNCTION(pdo_cfd1)
 	php_info_print_table_start();
 	php_info_print_table_row(2, "CloudFlare D1 SQL support for PDO", "enabled");
 	php_info_print_table_row(2, "CloudFlare D1 SQL module detected",
-		EM_ASM_INT({ return !!Module.cfdb }) ? "yes" : "no"
+		EM_ASM_INT({ return typeof Module.cfd1 === 'object' && Object.keys(Module.cfd1).length }) ? "yes" : "no"
 	);
 	php_info_print_table_end();
 
