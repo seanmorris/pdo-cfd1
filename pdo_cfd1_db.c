@@ -103,16 +103,12 @@ static int pdo_cfd1_get_attr(pdo_dbh_t *dbh, zend_long attr, zval *return_value)
 
 static void pdo_cfd1_request_shutdown(pdo_dbh_t *dbh)
 {
-	EM_ASM({
-		console.log('SHUTDOWN');
-	});
+	EM_ASM({ console.log('SHUTDOWN'); });
 }
 
 static void pdo_cfd1_get_gc(pdo_dbh_t *dbh, zend_get_gc_buffer *gc_buffer)
 {
-	EM_ASM({
-		console.log('GET GC', $0);
-	}, gc_buffer);
+	EM_ASM({ console.log('GET GC', $0);}, gc_buffer);
 }
 
 static const struct pdo_dbh_methods cfd1_db_methods = {

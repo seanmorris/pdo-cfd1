@@ -13,8 +13,11 @@
 Simply pass the D1 object into the php-wasm constructor as `cfd1` to enable pdo_cfd1 support:
 
 ```javascript
-const mainDb = context.env.db;
-const php = new PhpWorker({ cfd1: { mainDb } });
+export async function onRequest(event)
+{
+	const mainDb = event.env.mainDb;
+	const php = new PhpWorker({ cfd1: { mainDb } });
+}
 ```
 
 Once D1 is passed in, `cfd1:` will be available as a PDO driver.
