@@ -36,7 +36,9 @@ export async function onRequest(event)
     
     php.run(`<?php
         $pdo = new PDO('cfd1:main');
-        $select = $pdo->prepare('SELECT PageTitle, PageContent FROM WikiPages WHERE PageTitle = ?');
+        $select = $pdo->prepare(
+            'SELECT PageTitle, PageContent FROM WikiPages WHERE PageTitle = ?'
+        );
         $select->execute([$pageTitle]);
         $page = $select->fetchObject();`
     );
