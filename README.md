@@ -15,10 +15,10 @@ Simply pass the D1 object into the php-wasm constructor as `cfd1` to enable pdo_
 ```javascript
 export async function onRequest(event)
 {
-	const mainDb = event.env.mainDb;
-	const php = new PhpWorker({ cfd1: { mainDb } });
-	
-	php.run(`<?php $pdo = new PDO('cfd1:mainDb');`);
+    const mainDb = event.env.mainDb;
+    const php = new PhpWorker({ cfd1: { mainDb } });
+    
+    php.run(`<?php $pdo = new PDO('cfd1:mainDb');`);
 }
 ```
 
@@ -31,15 +31,15 @@ PDO can be used with D1 just like any other SQL server:
 ```javascript
 export async function onRequest(event)
 {
-	const mainDb = event.env.mainDb;
-	const php = new PhpWorker({ cfd1: { mainDb } });
-	
-	php.run(`<?php
-		$pdo = new PDO('cfd1:main');
-		$select = $pdo->prepare('SELECT PageTitle, PageContent FROM WikiPages WHERE PageTitle = ?');
-		$select->execute([$pageTitle]);
-		$page = $select->fetchObject();`
-	);
+    const mainDb = event.env.mainDb;
+    const php = new PhpWorker({ cfd1: { mainDb } });
+    
+    php.run(`<?php
+        $pdo = new PDO('cfd1:main');
+        $select = $pdo->prepare('SELECT PageTitle, PageContent FROM WikiPages WHERE PageTitle = ?');
+        $select->execute([$pageTitle]);
+        $page = $select->fetchObject();`
+    );
 }
 ```
 
