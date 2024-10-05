@@ -10,17 +10,7 @@
 
 ## Connect & Configure
 
-Simply pass the D1 object into the php-wasm constructor as `cfd1` to enable pdo_cfd1 support:
-
-```javascript
-export async function onRequest(event)
-{
-	const mainDb = event.env.mainDb;
-	const php = new PhpWorker({ cfd1: { mainDb } });
-}
-```
-
-Once D1 is passed in, `cfd1:` will be available as a PDO driver.
+Simply pass the D1 object into the php-wasm constructor as `cfd1` to enable pdo_cfd1 support. Once D1 is passed in, `cfd1:` will be available as a PDO driver.
 
 ```javascript
 export async function onRequest(event)
@@ -52,6 +42,11 @@ export async function onRequest(event)
 	`);
 }
 ```
+
+## Todo
+
+* *Named replacement tokens* - Currently only positional tokens are supported.
+* *Error handling* - Error handling is currently very rudimentary and does not propagage messages.
 
 ## CloudFlare D1
 
