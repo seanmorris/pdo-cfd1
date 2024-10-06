@@ -8,6 +8,8 @@
 
 ### Coming Soon! Tutorial on getting php-wasm running in CloudFlare.
 
+pdo_cfd1 requires PHP 8.1+
+
 ## Connect & Configure
 
 Simply pass the D1 object into the php-wasm constructor as `cfd1` to enable pdo_cfd1 support. Once D1 is passed in, `cfd1:` will be available as a PDO driver.
@@ -17,7 +19,7 @@ export async function onRequest(event)
 {
     const mainDb = event.env.mainDb;
     const php = new PhpWorker({ cfd1: { mainDb } });
-    
+
     php.run(`<?php $pdo = new PDO('cfd1:mainDb');`);
 }
 ```
@@ -33,7 +35,7 @@ export async function onRequest(event)
 {
     const mainDb = event.env.mainDb;
     const php = new PhpWorker({ cfd1: { mainDb } });
-    
+
     php.run(`<?php
         $pdo = new PDO('cfd1:main');
         $select = $pdo->prepare('SELECT PageTitle, PageContent FROM WikiPages WHERE PageTitle = ?');
