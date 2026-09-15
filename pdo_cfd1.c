@@ -31,7 +31,7 @@ typedef struct {
 # define CFD1_RETURN_VOID return
 #endif
 
-#include "pdo_cfd1_js.h"
+#include <pdo_cfd1_js.h>
 
 static cfd1_error_info *cfd1_error(pdo_dbh_t *dbh, pdo_stmt_t *stmt)
 {

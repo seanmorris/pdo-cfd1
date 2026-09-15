@@ -152,6 +152,20 @@ bindings rather than text.
 Configure the extension with `--enable-pdo-cfd1`. It requires PDO and Vrzno;
 `config.m4` declares those dependencies and accepts PHP 8.0 or later.
 
+The JavaScript function bodies live in `pdo_cfd1_*.js`. PHP's normal Make build
+uses `Makefile.frag` to expand the `#include "...js"` lines in
+`pdo_cfd1_js.h.in` into `generated/pdo_cfd1_js.h` before compiling the driver.
+The template retains the C signatures and `EM_JS`/`EM_ASYNC_JS` wrappers, so the
+JavaScript still travels inside the compiled object. Every included JS file is
+a Make dependency; editing one rebuilds the header and driver. The generated
+header is a build output and is not committed or imported as source.
+
+To generate just the header in a driver checkout:
+
+```sh
+make -f Makefile.frag srcdir=. builddir=. generated/pdo_cfd1_js.h
+```
+
 The php-wasm importer selects this repository with `PDO_CFD1_REPOSITORY` and an
 immutable `PDO_CFD1_REF`. `PDO_CFD1_DEV_PATH` selects an explicit development
 checkout instead. Enable `WITH_PDO_CFD1=1` and `WITH_VRZNO=1` for custom builds;
@@ -163,8 +177,11 @@ Run the portable driver tests without installing dependencies:
 node --test tests/*.test.mjs
 ```
 
-These tests extract the actual `EM_JS`/`EM_ASYNC_JS` bodies from `pdo_cfd1_js.h`
-and exercise binding validation, parameter scanning and rebinding, insert IDs,
-atomic batches, and failure/recovery behavior. CI runs them on Node 22.23.2 and 24.5.0. Full
+These tests load the JS source files directly and exercise binding validation,
+parameter scanning and rebinding, insert IDs, atomic batches, and
+failure/recovery behavior. Make tests cover fresh and incremental generation,
+parallel object dependencies, separate build directories, and missing inputs.
+They require Make, sed, and awk, also used by the PHP build. CI runs them on
+Node 22.23.2 and 24.5.0. Full
 PHP/Asyncify and local D1 integration tests are maintained in
 [`php-wasm/test/cloudflare`](https://github.com/seanmorris/php-wasm/tree/7863be7ae5fc0b21c54503403acded9ff3d72f77/test/cloudflare).

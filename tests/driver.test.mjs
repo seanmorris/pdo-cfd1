@@ -5,7 +5,7 @@ import { test } from 'node:test';
 
 // Exercise the JavaScript bodies compiled from this checkout. PHP/Asyncify and
 // real D1 integration coverage lives in php-wasm/test/cloudflare.
-const source = ['pdo_cfd1.c', 'pdo_cfd1_js.h'].map(name => fs.readFileSync(new URL('../' + name, import.meta.url), 'utf8')).join('\n');
+const source = fs.readFileSync(new URL('../pdo_cfd1.c', import.meta.url), 'utf8');
 
 /**
  * Loads the shipped JavaScript glue with a bounded, fake Wasm string heap.
@@ -35,11 +35,9 @@ function fixture(binding = { prepare: query => ({ run: async () => ({ success: t
 	};
 	for(const [name, parameters] of Object.entries(args))
 	{
-		const marker = source.indexOf(', ' + name + ',');
-		assert.ok(marker >= 0, name);
-		const start = source.indexOf('{\n', marker) + 2;
-		const end = source.indexOf('\n});', start);
-		const body = source.slice(start, end);
+		const filename = name.replace('cfd1_js_', 'pdo_cfd1_') + '.js';
+		const body = fs.readFileSync(new URL('../' + filename, import.meta.url), 'utf8');
+		assert.doesNotMatch(body, /\beval\s*\(|new\s+Function\s*\(/);
 		functions[name] = vm.runInContext('(' + (['cfd1_js_execute', 'cfd1_js_batch'].includes(name) ? 'async ' : '') + 'function(' + parameters.join(',') + '){\n' + body + '\n})', context);
 	}
 	functions.cfd1_js_init();

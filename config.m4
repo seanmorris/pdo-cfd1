@@ -37,6 +37,8 @@ if test "$PHP_PDO_CFD1" != "no"; then
   fi
 
   PHP_NEW_EXTENSION(pdo_cfd1, pdo_cfd1.c, $ext_shared)
+  PHP_ADD_INCLUDE([$ext_builddir/generated], [1])
+  PHP_ADD_MAKEFILE_FRAGMENT
   PHP_ADD_EXTENSION_DEP(pdo_cfd1, pdo)
   PHP_ADD_EXTENSION_DEP(pdo_cfd1, vrzno)
 fi
