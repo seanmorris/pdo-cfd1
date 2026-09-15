@@ -201,7 +201,7 @@ static void cfd1_stmt_publish(pdo_stmt_t *stmt)
                 stmt->columns[column].name = zend_string_tolower(name);
                 zend_string_release(name);
             } else if (stmt->dbh->desired_case == PDO_CASE_UPPER) {
-#if PHP_VERSION_ID < 80100
+#if PHP_VERSION_ID < 80200
                 stmt->columns[column].name = php_string_toupper(name);
 #else
                 stmt->columns[column].name = zend_string_toupper(name);
