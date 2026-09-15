@@ -571,7 +571,7 @@ PHP_METHOD(PDO, cfd1Batch)
         Z_PARAM_ARRAY(input)
     ZEND_PARSE_PARAMETERS_END();
     pdo_dbh_t *dbh = Z_PDO_DBH_P(ZEND_THIS);
-    if (!dbh->methods || dbh->methods->preparer != cfd1_prepare) {
+    if (!dbh->driver || !dbh->driver_data || !dbh->methods || dbh->methods->preparer != cfd1_prepare) {
         zend_throw_exception_ex(php_pdo_get_exception(), 0, "cfd1Batch requires a cfd1 PDO connection");
         RETURN_FALSE;
     }
