@@ -5,9 +5,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { parse } from 'espree';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const inputs = fs.readdirSync(root).filter(name => /^pdo_cfd1_[a-z_]+\.js$/.test(name));
+
+function syntax(source)
+{
+	const ast = parse(source, { ecmaVersion: 'latest', sourceType: 'module', ecmaFeatures: { globalReturn: true } });
+	return JSON.parse(JSON.stringify(ast, (key, value) => ['start', 'end'].includes(key) ? undefined : value));
+}
 
 function fixture(t, outOfTree = false)
 {
@@ -64,7 +71,12 @@ for(const outOfTree of [false, true])
 		assert.equal([...header.matchAll(/^EM_JS\(/gm)].length, 4);
 		assert.equal([...header.matchAll(/^EM_ASYNC_JS\(/gm)].length, 2);
 		for(const name of inputs) {
-			assert.ok(header.includes(fs.readFileSync(path.join(f.source, name), 'utf8')), name);
+			const functionName = name.replace('pdo_cfd1_', 'cfd1_js_').replace('.js', '');
+			const body = header.match(new RegExp('^EM_(?:ASYNC_)?JS\\([^\\n]*\\b' + functionName + '\\b[^\\n]*\\{\\n([\\s\\S]*?)^\\}\\);', 'm'))?.[1];
+			assert.notEqual(body, undefined, name);
+			// The preprocessor normalizes indentation tabs. Check the actual JS
+			// syntax, including literal values and control flow, independently of it.
+			assert.deepEqual(syntax(body), syntax(fs.readFileSync(path.join(f.source, name), 'utf8')), name);
 			assert.ok(fs.readFileSync(f.dependencies, 'utf8').includes(name), name);
 		}
 		assert.equal(fs.readFileSync(f.object, 'utf8'), header);

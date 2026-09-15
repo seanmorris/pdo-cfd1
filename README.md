@@ -180,8 +180,14 @@ Run the driver and build tests with Node, GNU Make 4.3 or later, and the
 php-wasm build's Emscripten 6.0.6 toolchain on `PATH`:
 
 ```sh
-node --test tests/*.test.mjs
+npm ci
+npm run lint
+npm test
 ```
+
+The JS bodies follow `sm-no-saccade-style`'s recommended ESLint config. Use
+`npm run lint:fix` to apply formatting. The pinned npm dependencies are development
+tools; PHP's Make build does not need them. CI checks formatting before the tests.
 
 These tests load the JS source files directly and exercise binding validation,
 parameter scanning and rebinding, insert IDs, atomic batches, and
