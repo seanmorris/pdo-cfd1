@@ -32,9 +32,13 @@ if test "$PHP_PDO_CFD1" != "no"; then
     AC_MSG_ERROR([failed to detect PHP version, please report])
   fi
 
-  if test "$cfd1_php_version" -lt "8001000"; then
-    AC_MSG_ERROR([You need at least PHP 8.1 to be able to use pdo_cfd1])
+  if test "$cfd1_php_version" -lt "8000000"; then
+    AC_MSG_ERROR([You need at least PHP 8.0 to be able to use pdo_cfd1])
   fi
 
   PHP_NEW_EXTENSION(pdo_cfd1, pdo_cfd1.c, $ext_shared)
+  PHP_ADD_INCLUDE([$ext_builddir/generated], [1])
+  PHP_ADD_MAKEFILE_FRAGMENT
+  PHP_ADD_EXTENSION_DEP(pdo_cfd1, pdo)
+  PHP_ADD_EXTENSION_DEP(pdo_cfd1, vrzno)
 fi

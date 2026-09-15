@@ -1,0 +1,24 @@
+/* Public D1 API glue. Shared by individual execution and atomic batches. */
+EM_JS(void, cfd1_js_init, (void), {
+#include "pdo_cfd1_init.js"
+});
+
+EM_JS(char *, cfd1_js_connect, (void *connection, const char *name), {
+#include "pdo_cfd1_connect.js"
+});
+
+EM_JS(char *, cfd1_js_prepare, (void *statement, void *connection, const char *sql, size_t length), {
+#include "pdo_cfd1_prepare.js"
+});
+
+EM_JS(int, cfd1_js_parameter_index, (void *statement, const char *name, int position), {
+#include "pdo_cfd1_parameter_index.js"
+});
+
+EM_ASYNC_JS(char *, cfd1_js_execute, (void *statement), {
+#include "pdo_cfd1_execute.js"
+});
+
+EM_ASYNC_JS(char *, cfd1_js_batch, (void *connection, void **statements, int count), {
+#include "pdo_cfd1_batch.js"
+});
