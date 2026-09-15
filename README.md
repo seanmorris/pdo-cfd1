@@ -153,17 +153,22 @@ Configure the extension with `--enable-pdo-cfd1`. It requires PDO and Vrzno;
 `config.m4` declares those dependencies and accepts PHP 8.0 or later.
 
 The JavaScript function bodies live in `pdo_cfd1_*.js`. PHP's normal Make build
-uses `Makefile.frag` to expand the `#include "...js"` lines in
+uses `Makefile.frag` to run the configured compiler (`CC`) with
+`-E -P -CC -fdirectives-only`, expanding the `#include "...js"` lines in
 `pdo_cfd1_js.h.in` into `generated/pdo_cfd1_js.h` before compiling the driver.
+This pass preserves comments and JS identifiers that resemble C macros.
 The template retains the C signatures and `EM_JS`/`EM_ASYNC_JS` wrappers, so the
-JavaScript still travels inside the compiled object. Every included JS file is
-a Make dependency; editing one rebuilds the header and driver. The generated
-header is a build output and is not committed or imported as source.
+JavaScript still travels inside the compiled object. The compiler also writes
+`generated/pdo_cfd1_js.d`, recording every include, including nested ones, as a
+Make dependency. Editing one rebuilds the header and driver. Failed generation
+reports the compiler's file/line diagnostic and preserves the previous outputs.
+The generated header and dependency file are build outputs and are not committed
+or imported as source.
 
 To generate just the header in a driver checkout:
 
 ```sh
-make -f Makefile.frag srcdir=. builddir=. generated/pdo_cfd1_js.h
+make -f Makefile.frag CC=emcc srcdir=. builddir=. generated/pdo_cfd1_js.h
 ```
 
 The php-wasm importer selects this repository with `PDO_CFD1_REPOSITORY` and an
@@ -171,7 +176,8 @@ immutable `PDO_CFD1_REF`. `PDO_CFD1_DEV_PATH` selects an explicit development
 checkout instead. Enable `WITH_PDO_CFD1=1` and `WITH_VRZNO=1` for custom builds;
 the Cloudflare profile enables both automatically.
 
-Run the portable driver tests without installing dependencies:
+Run the driver and build tests with Node, GNU Make 4.3 or later, and the
+php-wasm build's Emscripten 6.0.6 toolchain on `PATH`:
 
 ```sh
 node --test tests/*.test.mjs
@@ -180,8 +186,12 @@ node --test tests/*.test.mjs
 These tests load the JS source files directly and exercise binding validation,
 parameter scanning and rebinding, insert IDs, atomic batches, and
 failure/recovery behavior. Make tests cover fresh and incremental generation,
-parallel object dependencies, separate build directories, and missing inputs.
-They require Make, sed, and awk, also used by the PHP build. CI runs them on
-Node 22.23.2 and 24.5.0. Full
+parallel object dependencies, separate build directories, nested includes,
+macro preservation, missing inputs and dependency files, and clean targets.
+An Emscripten compile/link test removes the source and generated header after
+compilation, then links the object alone and runs all six functions, including
+asynchronous execution, error recovery, and batching.
+CI runs them on Node 22.23.2 and 24.5.0 with Emscripten 6.0.6. The JS tests alone
+can run without a compiler using `node --test tests/driver.test.mjs`. Full
 PHP/Asyncify and local D1 integration tests are maintained in
 [`php-wasm/test/cloudflare`](https://github.com/seanmorris/php-wasm/tree/7863be7ae5fc0b21c54503403acded9ff3d72f77/test/cloudflare).

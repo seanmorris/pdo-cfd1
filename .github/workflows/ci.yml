@@ -15,7 +15,10 @@ jobs:
   driver:
     name: Driver glue / Node ${{ matrix.node }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    container: emscripten/emsdk:6.0.6
+    timeout-minutes: 10
+    env:
+      CC: emcc
     strategy:
       fail-fast: false
       matrix:
