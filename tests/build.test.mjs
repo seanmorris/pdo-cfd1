@@ -35,11 +35,16 @@ ${fragment}`);
 		return result;
 	};
 	const read = () => fs.readFileSync(header, 'utf8');
-	const ageOutputs = () => {
-		const earlier = new Date(Date.now() - 5000);
-		for(const file of [header, object]) fs.utimesSync(file, earlier, earlier);
+	const prepareEdit = () => {
+		// Only the next edited input may be newer than the outputs. Otherwise a
+		// stale template could hide a missing dependency on an individual JS file.
+		const inputTime = new Date(Date.now() - 10000);
+		const outputTime = new Date(Date.now() - 5000);
+		for(const name of ['Makefile.frag', 'pdo_cfd1_js.h.in', ...fs.readdirSync(source).filter(name => name.endsWith('.js'))])
+			fs.utimesSync(path.join(source, name), inputTime, inputTime);
+		for(const file of [header, object]) fs.utimesSync(file, outputTime, outputTime);
 	};
-	return { source, build, header, object, run, read, ageOutputs };
+	return { source, build, header, object, run, read, prepareEdit };
 }
 
 for(const outOfTree of [false, true])
@@ -61,7 +66,7 @@ for(const outOfTree of [false, true])
 		// An edit to any included body must regenerate the header and its object.
 		for(const name of inputs)
 		{
-			f.ageOutputs();
+			f.prepareEdit();
 			const marker = `// changed ${name}: $value, \\n, "quotes", \`template\`\n`;
 			fs.appendFileSync(path.join(f.source, name), marker);
 			f.run();
@@ -78,13 +83,13 @@ for(const outOfTree of [false, true])
 test('Make discovers new includes and rejects missing inputs without replacing the last header', t => {
 	const f = fixture(t, true);
 	f.run();
-	f.ageOutputs();
+	f.prepareEdit();
 	const extra = path.join(f.source, 'pdo_cfd1_extra.js');
 	fs.writeFileSync(extra, '// additional body\n');
 	fs.appendFileSync(path.join(f.source, 'pdo_cfd1_js.h.in'), '#include "pdo_cfd1_extra.js"\n');
 	f.run();
 	assert.ok(f.read().includes('// additional body\n'));
-	f.ageOutputs();
+	f.prepareEdit();
 	fs.appendFileSync(extra, '// changed additional body\n');
 	f.run();
 	assert.ok(f.read().includes('// changed additional body\n'));
