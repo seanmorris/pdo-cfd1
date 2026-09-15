@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Retain batch statements while PHP stream callbacks collect BLOB data, and release them on success and failure.
 - Add named/numbered parameters while preserving ordinary execute(array) and explicit bindings.
 - Add direct execution, SQLite quoting, connection-local insert IDs, binary strings/streams, buffered scroll cursors, and observed column metadata.
 - Add cfd1Batch() for atomic execution of existing bound PDO statements, with shared conversion, validation, result handling, and PDO errors.

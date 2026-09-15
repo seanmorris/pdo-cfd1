@@ -605,6 +605,8 @@ PHP_METHOD(PDO, cfd1Batch)
             valid = false;
             break;
         }
+        /* User stream callbacks can replace referenced entries in the input. */
+        GC_ADDREF(&stmt->std);
         statements[used++] = stmt;
     } ZEND_HASH_FOREACH_END();
     zend_hash_destroy(&seen);
@@ -629,8 +631,9 @@ PHP_METHOD(PDO, cfd1Batch)
             }
         }
     }
-    efree(statements);
     if (!valid) cfd1_report_error(dbh);
+    for (uint32_t i = 0; i < used; i++) OBJ_RELEASE(&statements[i]->std);
+    efree(statements);
     RETURN_BOOL(valid);
 }
 
