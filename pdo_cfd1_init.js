@@ -113,15 +113,18 @@ Module['__pdoCfd1'] = {
 						break;
 					}
 				}
-			} else if(c === '-' && query[i] === '-')
+			}
+			else if(c === '-' && query[i] === '-')
 			{
 				while(i < query.length && query[i] !== '\n') i++;
-			} else if(c === '/' && query[i] === '*')
+			}
+			else if(c === '/' && query[i] === '*')
 			{
 				i++;
 				while(i < query.length && !(query[i] === '*' && query[i + 1] === '/')) i++;
 				i = Math.min(i + 2, query.length);
-			} else if(c === '?' || (c === ':' && /[A-Za-z0-9_]/.test(query[i] || "")))
+			}
+			else if(c === '?' || (c === ':' && /[A-Za-z0-9_]/.test(query[i] || "")))
 			{
 				const named = c === ':', nextMode = named ? 'named' : 'positional';
 				if(mode && mode !== nextMode) this.fail('HY093', 'Cannot mix named and positional parameters');
@@ -133,7 +136,8 @@ Module['__pdoCfd1'] = {
 					const name = query.slice(start, i);
 					if(!names.has(name)) names.set(name, names.size);
 					slot = names.get(name);
-				} else
+				}
+				else
 				{
 					while(/[0-9]/.test(query[i] || "")) i++;
 					slot = i > start + 1 ? Number(query.slice(start + 1, i)) - 1 : count;
@@ -147,14 +151,17 @@ Module['__pdoCfd1'] = {
 				required.add(slot);
 				sql += '?' + (slot + 1);
 				continue;
-			} else if((c === '@' || c === '$') && /[A-Za-z0-9_]/.test(query[i] || ""))
+			}
+			else if((c === '@' || c === '$') && /[A-Za-z0-9_]/.test(query[i] || ""))
 			{
 				this.fail('HYC00', 'Use PDO :name parameters instead of @name or $name');
-			} else if(/[A-Za-z_]/.test(c))
+			}
+			else if(/[A-Za-z_]/.test(c))
 			{
 				while(/[A-Za-z0-9_]/.test(query[i] || "")) i++;
 				tokens.push(query.slice(start, i).toUpperCase());
-			} else if('();'.includes(c)) tokens.push(c);
+			}
+			else if('();'.includes(c)) tokens.push(c);
 			sql += query.slice(start, i);
 		}
 		// Identify INSERT/REPLACE after WITH and within scripts, but not in
