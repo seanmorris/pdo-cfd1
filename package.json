@@ -2,7 +2,7 @@
   "name": "pdo-cfd1-driver",
   "private": true,
   "scripts": {
-    "lint": "eslint pdo_cfd1_*.js eslint.config.mjs --max-warnings=0",
+    "lint": "eslint js/ eslint.config.mjs tests/ --max-warnings=0",
     "lint:fix": "npm run lint -- --fix",
     "test": "node --test tests/*.test.mjs"
   },

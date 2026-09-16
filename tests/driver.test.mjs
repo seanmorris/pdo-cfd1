@@ -28,15 +28,16 @@ function fixture(binding = { prepare: query => ({ run: async () => ({ success: t
 	});
 	const functions = {};
 	const args = {
-		cfd1_js_init: [], cfd1_js_connect: ['connection', 'name'],
-		cfd1_js_prepare: ['statement', 'connection', 'sql', 'length'],
-		cfd1_js_parameter_index: ['statement', 'name', 'position'],
-		cfd1_js_execute: ['statement'], cfd1_js_batch: ['connection', 'statements', 'count']
+		cfd1_js_init: [], cfd1_js_connect: ['connection', 'name']
+		, cfd1_js_prepare: ['statement', 'connection', 'sql', 'length']
+		, cfd1_js_parameter_index: ['statement', 'name', 'position']
+		, cfd1_js_execute: ['statement']
+		, cfd1_js_batch: ['connection', 'statements', 'count']
 	};
 	for(const [name, parameters] of Object.entries(args))
 	{
 		const filename = name.replace('cfd1_js_', 'pdo_cfd1_') + '.js';
-		const body = fs.readFileSync(new URL('../' + filename, import.meta.url), 'utf8');
+		const body = fs.readFileSync(new URL('../js/' + filename, import.meta.url), 'utf8');
 		assert.doesNotMatch(body, /\beval\s*\(|new\s+Function\s*\(/);
 		functions[name] = vm.runInContext('(' + (['cfd1_js_execute', 'cfd1_js_batch'].includes(name) ? 'async ' : '') + 'function(' + parameters.join(',') + '){\n' + body + '\n})', context);
 	}
@@ -172,24 +173,26 @@ test('numbered parameters preserve SQLite slot order and permit unused gaps', as
     assert.deepEqual(calls[0].params, ['first', null, 'third', 'fourth']);
     assert.match(f.error(await f.execute(['first'])), /^HY093:/);
     assert.equal(calls.length, 1);
-    for (const sql of ['SELECT :name, ?', 'SELECT ?1, :name', 'SELECT ?0', 'SELECT ?101', 'SELECT ?99999999999999999999']) {
+    for(const sql of ['SELECT :name, ?', 'SELECT ?1, :name', 'SELECT ?0', 'SELECT ?101', 'SELECT ?99999999999999999999'])
+{
         assert.match(f.error(f.prepare(sql)), /^HY093:/);
-    }
+}
 });
 
 test('insert recognition excludes SQL text, subqueries and trigger bodies', () => {
     const f = fixture(), parse = sql => f.Module.__pdoCfd1.parse(sql).inserts;
-    for (const sql of [
-        'INSERT INTO t VALUES (1)', 'REPLACE INTO t VALUES (1)',
-        'WITH x AS (SELECT 1) INSERT INTO t SELECT * FROM x',
-        'CREATE TABLE t(x); INSERT INTO t VALUES (1); SELECT * FROM t',
-        'WITH RECURSIVE x(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM x WHERE n<3) INSERT INTO t SELECT * FROM x'
+    for(const sql of [
+        'INSERT INTO t VALUES (1)', 'REPLACE INTO t VALUES (1)'
+        , 'WITH x AS (SELECT 1) INSERT INTO t SELECT * FROM x'
+        , 'CREATE TABLE t(x); INSERT INTO t VALUES (1); SELECT * FROM t'
+        , 'WITH RECURSIVE x(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM x WHERE n<3) INSERT INTO t SELECT * FROM x'
     ]) assert.equal(parse(sql), true, sql);
-    for (const sql of [
-        "SELECT 'INSERT INTO t VALUES (1)'", 'WITH x AS (SELECT 1) SELECT * FROM x',
-        'CREATE TRIGGER tr AFTER UPDATE ON t BEGIN INSERT INTO log VALUES(1); INSERT INTO log VALUES(2); END;',
-        "CREATE TRIGGER tr AFTER UPDATE ON t BEGIN SELECT CASE WHEN 1 THEN 'END' ELSE 'INSERT' END; INSERT INTO log VALUES(2); END;",
-        'UPDATE t SET x = (SELECT 1)', '/* INSERT */ DELETE FROM t'
+    for(const sql of [
+        "SELECT 'INSERT INTO t VALUES (1)'"
+        , 'WITH x AS (SELECT 1) SELECT * FROM x'
+        , 'CREATE TRIGGER tr AFTER UPDATE ON t BEGIN INSERT INTO log VALUES(1); INSERT INTO log VALUES(2); END;'
+        , "CREATE TRIGGER tr AFTER UPDATE ON t BEGIN SELECT CASE WHEN 1 THEN 'END' ELSE 'INSERT' END; INSERT INTO log VALUES(2); END;"
+        , 'UPDATE t SET x = (SELECT 1)', '/* INSERT */ DELETE FROM t'
     ]) assert.equal(parse(sql), false, sql);
 });
 
@@ -218,15 +221,15 @@ test('last insert IDs belong to each connection and never come from reads or fai
 test('batch binds every statement once and publishes independent results without calling run', async () => {
     let calls = 0;
     const f = fixture({
-        prepare: sql => ({ sql, bind: (...params) => ({ sql, params }), run: () => { throw new Error('must use batch'); } }),
-        batch: async statements => {
+        prepare: sql => ({ sql, bind: (...params) => ({ sql, params }), run: () => { throw new Error('must use batch'); } })
+        , batch: async statements => {
             calls++;
             assert.equal(statements.length, 2);
             assert.deepEqual(statements[0].params, [new Uint8Array([0, 255])]);
             assert.deepEqual(statements[1].params, ['key']);
             return [
-                { success: true, results: [], meta: { changes: 1, last_row_id: 12 } },
-                { success: true, results: [{ value: [0, 255] }], meta: { changes: 0, last_row_id: 999 } }
+                { success: true, results: [], meta: { changes: 1, last_row_id: 12 } }
+                , { success: true, results: [{ value: [0, 255] }], meta: { changes: 0, last_row_id: 999 } }
             ];
         }
     });
@@ -253,23 +256,24 @@ test('batch parameter failures prevent the entire D1 request', async () => {
 
 test('batch failures clear every result without publishing partial insert IDs or retrying', async () => {
     let response, calls = 0;
-    const f = fixture({ prepare: () => ({}), batch: async () => {
+    const f = fixture({ prepare: () => ({})
+    , batch: async () => {
         calls++;
-        if (response instanceof Error) throw response;
+        if(response instanceof Error) throw response;
         return response;
     } });
     f.prepare('INSERT INTO t VALUES (1)', 1); f.prepare('SELECT 1', 2);
     const state = f.Module.__pdoCfd1;
     state.connections.get(f.connection).lastId = '7';
-    for (const failure of [
-        new Error('transaction rolled back'),
-        [{ success: true, meta: { changes: 1, last_row_id: 99 } }, { success: false, error: 'later statement failed' }],
-        [{ success: true }],
-        [{ success: true, meta: { changes: 1, last_row_id: 99 } }, { success: true, results: [{ invalid: {} }] }]
+    for(const failure of [
+        new Error('transaction rolled back')
+        , [{ success: true, meta: { changes: 1, last_row_id: 99 } }, { success: false, error: 'later statement failed' }]
+        , [{ success: true }]
+        , [{ success: true, meta: { changes: 1, last_row_id: 99 } }, { success: true, results: [{ invalid: {} }] }]
     ]) {
         response = failure;
         assert.match(f.error(await f.batch([1, 2], [[], []])), /^HY000:/);
-        for (const id of [1, 2]) assert.equal(state.statements.get(id).rows.length, 0);
+        for(const id of [1, 2]) assert.equal(state.statements.get(id).rows.length, 0);
         assert.equal(state.connections.get(f.connection).lastId, '7');
     }
     assert.equal(calls, 4);

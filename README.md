@@ -152,7 +152,7 @@ bindings rather than text.
 Configure the extension with `--enable-pdo-cfd1`. It requires PDO and Vrzno;
 `config.m4` declares those dependencies and accepts PHP 8.0 or later.
 
-The JavaScript function bodies live in `pdo_cfd1_*.js`. PHP's normal Make build
+The JavaScript function bodies live in `js/pdo_cfd1_*.js`. PHP's normal Make build
 uses `Makefile.frag` to run the configured compiler (`CC`) with
 `-E -P -CC -fdirectives-only`, expanding the `#include "...js"` lines in
 `pdo_cfd1_js.h.in` into `generated/pdo_cfd1_js.h` before compiling the driver.
@@ -186,7 +186,7 @@ npm test
 ```
 
 The JS bodies follow `sm-no-saccade-style`'s recommended ESLint config. Use
-`npm run lint:fix` to apply formatting. The pinned npm dependencies are development
+`npm run lint:fix` to apply formatting. The style gate covers `js/`, tests, and the lint configuration. The pinned npm dependencies are development
 tools; PHP's Make build does not need them. CI checks formatting before the tests.
 
 These tests load the JS source files directly and exercise binding validation,

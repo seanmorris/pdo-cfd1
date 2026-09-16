@@ -4,7 +4,7 @@ import {parse} from 'espree';
 export default [
 	...smNoSaccadeStyle.configs.recommended
 	, {
-		files: ['pdo_cfd1_*.js']
+		files: ['js/*.js']
 		, languageOptions: {
 			// Module parsing accepts await in EM_ASYNC_JS function bodies.
 			sourceType: 'module'

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { parse } from 'espree';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const inputs = fs.readdirSync(root).filter(name => /^pdo_cfd1_[a-z_]+\.js$/.test(name));
+const inputs = fs.readdirSync(path.join(root, 'js')).filter(name => /^pdo_cfd1_[a-z_]+\.js$/.test(name)).map(name => 'js/' + name);
 
 function syntax(source)
 {
@@ -25,7 +25,10 @@ function fixture(t, outOfTree = false)
 	fs.mkdirSync(source);
 	fs.mkdirSync(build, { recursive: true });
 	for(const name of ['Makefile.frag', 'pdo_cfd1_js.h.in', ...inputs])
+	{
+		fs.mkdirSync(path.dirname(path.join(source, name)), {recursive: true});
 		fs.copyFileSync(path.join(root, name), path.join(source, name));
+	}
 	// PHP_ADD_MAKEFILE_FRAGMENT substitutes these paths during configure.
 	const fragment = fs.readFileSync(path.join(source, 'Makefile.frag'), 'utf8')
 		.replaceAll('$(srcdir)', source).replaceAll('$(builddir)', build);
@@ -42,7 +45,8 @@ ${fragment}`);
 			cwd: build, encoding: 'utf8', timeout: 60000
 		});
 		if(success) assert.equal(result.status, 0, result.stdout + result.stderr);
-		else {
+		else
+		{
 			assert.equal(result.error, undefined, 'Make must fail without hanging');
 			assert.notEqual(result.status, 0, 'Expected Make to reject missing JS');
 		}
@@ -70,8 +74,9 @@ for(const outOfTree of [false, true])
 		assert.doesNotMatch(header, /^#include/m);
 		assert.equal([...header.matchAll(/^EM_JS\(/gm)].length, 4);
 		assert.equal([...header.matchAll(/^EM_ASYNC_JS\(/gm)].length, 2);
-		for(const name of inputs) {
-			const functionName = name.replace('pdo_cfd1_', 'cfd1_js_').replace('.js', '');
+		for(const name of inputs)
+		{
+			const functionName = path.basename(name).replace('pdo_cfd1_', 'cfd1_js_').replace('.js', '');
 			const body = header.match(new RegExp('^EM_(?:ASYNC_)?JS\\([^\\n]*\\b' + functionName + '\\b[^\\n]*\\{\\n([\\s\\S]*?)^\\}\\);', 'm'))?.[1];
 			assert.notEqual(body, undefined, name);
 			// The preprocessor normalizes indentation tabs. Check the actual JS
@@ -258,8 +263,10 @@ int main(void) {
 	fs.rmSync(f.source, { recursive: true });
 	fs.rmSync(path.dirname(f.header), { recursive: true });
 	// Match the string helpers and allocator supplied by the PHP runtime.
-	run(compiler, [object, '-sASYNCIFY', '-sENVIRONMENT=node', '-sEXIT_RUNTIME=1',
-		'-sEXPORTED_FUNCTIONS=["_main","_malloc"]',
-		'-sEXPORTED_RUNTIME_METHODS=["UTF8ToString","lengthBytesUTF8","stringToUTF8"]', '-o', executable]);
+	run(compiler, [object, '-sASYNCIFY', '-sENVIRONMENT=node', '-sEXIT_RUNTIME=1'
+		, '-sEXPORTED_FUNCTIONS=["_main","_malloc"]'
+		, '-sEXPORTED_RUNTIME_METHODS=["UTF8ToString","lengthBytesUTF8","stringToUTF8"]'
+		, '-o'
+		, executable]);
 	assert.match(run(process.execPath, [executable]).stdout, /Embedded JS and Asyncify passed/);
 });
