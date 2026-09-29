@@ -26,7 +26,14 @@ package supplies this repository's JavaScript build and test tools.
 
 ## Install
 
-Get a `php-cloud-wasm` artifact from the nightly distribution described in the
+Install `php-cloud-wasm` 0.2.0 or newer from npm:
+
+```sh
+npm install php-cloud-wasm@^0.2.0
+```
+
+The package is in `node_modules/php-cloud-wasm/`. For a revision newer than the
+published package, get an artifact from the nightly distribution described in the
 [Cloudflare guide](https://github.com/seanmorris/php-wasm/blob/develop/CLOUDFLARE.md#ci-and-nightly-artifacts),
 or build one from a php-wasm checkout with its builder image available:
 
@@ -39,7 +46,9 @@ The Cloudflare profile includes PDO-CFD1 and Vrzno. Copy the complete artifact f
 PHP 8.3 into your Worker project's `php-cloud-wasm/` directory. The manifest
 `php8.3-cloudflare.manifest.json` lists the entrypoint, runtime, Wasm, and helpers
 that belong together. For a local build, those files are in
-`packages/php-cloud-wasm/`.
+`packages/php-cloud-wasm/`. The
+[PHP in Cloudflare guide](https://php-wasm.seanmorr.is/getting-started/php-in-cloudflare.html)
+includes a script that verifies the manifest and copies only those files.
 
 ### Dependencies
 
