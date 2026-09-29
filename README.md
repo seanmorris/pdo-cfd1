@@ -358,5 +358,6 @@ PHP/Asyncify and local D1 integration tests live in
 
 ## License
 
-UNLICENSED. This repository has no declared license. [CREDITS](CREDITS) names
-Sean Morris as its author.
+Dual licensed under the [Apache License, Version 2.0](LICENSE) and the
+[GNU General Public License, Version 2](LICENSE-GPL); you may use it under the
+terms of either license. [CREDITS](CREDITS) names Sean Morris as the author. See [NOTICE](NOTICE).
